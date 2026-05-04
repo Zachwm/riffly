@@ -19,9 +19,9 @@ This project is in the early development phase. Current work is focused on:
 
 ## Project Structure
 
-backend/ – FastAPI backend (in progress)
-data/ – sample datasets
-docs/ – diagrams and planning documents
+backend/ – FastAPI backend (in progress)  
+data/ – sample datasets  
+docs/ – diagrams and planning documents  
 
 ## Running the Project
 
