@@ -1,0 +1,97 @@
+[
+  {
+    "id": 1,
+    "title": "Blues Riff in A Minor",
+    "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
+    "video_url": "https://example.com/videos/riff1.mp4",
+    "difficulty": 2,
+    "bpm": 90,
+    "genre": "blues",
+    "tags": ["blues", "beginner", "minor"],
+    "techniques": ["hammer-on"],
+    "tabs": {
+      "e": "----------------|",
+      "B": "----------------|",
+      "G": "-----5h7--5-----|",
+      "D": "--7-------------|",
+      "A": "----------------|",
+      "E": "----------------|"
+    }
+  },
+  {
+    "id": 2,
+    "title": "Rock Power Riff",
+    "description": "Basic rock riff using power chords and steady rhythm.",
+    "video_url": "https://example.com/videos/riff2.mp4",
+    "difficulty": 2,
+    "bpm": 110,
+    "genre": "rock",
+    "tags": ["rock", "power-chords", "beginner"],
+    "techniques": ["strumming"],
+    "tabs": {
+      "e": "----------------|",
+      "B": "----------------|",
+      "G": "----------------|",
+      "D": "--2--2--4--2----|",
+      "A": "--2--2--4--2----|",
+      "E": "--0--0--2--0----|"
+    }
+  },
+  {
+    "id": 3,
+    "title": "Clean Slide Riff",
+    "description": "Smooth slide-based melodic riff in E minor.",
+    "video_url": "https://example.com/videos/riff3.mp4",
+    "difficulty": 3,
+    "bpm": 100,
+    "genre": "ambient",
+    "tags": ["slide", "melodic", "emotional"],
+    "techniques": ["slide"],
+    "tabs": {
+      "e": "----------------|",
+      "B": "------5/7-------|",
+      "G": "----4/6---------|",
+      "D": "--2-------------|",
+      "A": "----------------|",
+      "E": "----------------|"
+    }
+  },
+  {
+    "id": 4,
+    "title": "Pentatonic Lead Lick",
+    "description": "Simple lead lick using minor pentatonic scale.",
+    "video_url": "https://example.com/videos/riff4.mp4",
+    "difficulty": 3,
+    "bpm": 95,
+    "genre": "blues",
+    "tags": ["lead", "pentatonic", "solo"],
+    "techniques": ["bend"],
+    "tabs": {
+      "e": "----------------|",
+      "B": "----8b10--8-----|",
+      "G": "--7-------------|",
+      "D": "----------------|",
+      "A": "----------------|",
+      "E": "----------------|"
+    }
+  },
+  {
+    "id": 5,
+    "title": "Beginner Funk Groove",
+    "description": "Simple muted funk rhythm with steady groove.",
+    "video_url": "https://example.com/videos/riff5.mp4",
+    "difficulty": 2,
+    "bpm": 105,
+    "genre": "funk",
+    "tags": ["funk", "rhythm", "muted"],
+    "techniques": ["palm-mute"],
+    "tabs": {
+      "e": "x-x-x-x-x-x-----|",
+      "B": "x-x-x-x-x-x-----|",
+      "G": "--2--2--2--2----|",
+      "D": "--2--2--2--2----|",
+      "A": "----------------|",
+      "E": "----------------|"
+    }
+  }
+]

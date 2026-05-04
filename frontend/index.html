@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Riffly</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="feed" id="feed"></div>
+
+<script>
+const feed = document.getElementById("feed");
+
+let loading = false;
+
+// -------------------- INIT --------------------
+initFeed();
+
+async function initFeed() {
+  const riff1 = await fetchRiff();
+  addRiffCard(riff1);
+
+  const riff2 = await fetchRiff();
+  addRiffCard(riff2);
+}
+
+// -------------------- FETCH --------------------
+async function fetchRiff() {
+  const res = await fetch("http://127.0.0.1:8000/next-riff");
+  return await res.json();
+}
+
+// -------------------- SCROLL TRIGGER --------------------
+feed.addEventListener("scrollend", async () => {
+  if (loading) return;
+
+  const cards = feed.querySelectorAll(".card");
+  const lastCard = cards[cards.length - 1];
+  if (!lastCard) return;
+
+  const feedRect = feed.getBoundingClientRect();
+  const lastRect = lastCard.getBoundingClientRect();
+
+  // fire when last card is within one viewport height of being visible
+  if (lastRect.top < feedRect.bottom + feedRect.height) {
+    loading = true;
+    try {
+  const riff = await fetchRiff();
+  addRiffCard(riff);
+} catch (err) {
+  console.error("Failed to load riff", err);
+} finally {
+  loading = false;
+}
+  }
+});
+
+// -------------------- RENDER --------------------
+function addRiffCard(riff) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <div class="title">${riff.title}</div>
+    <div class="meta">
+      <span>${riff.genre}</span>
+      <span>${riff.bpm} BPM</span>
+      <span>Difficulty ${riff.difficulty}</span>
+    </div>
+    <pre>${formatTabs(riff.tabs)}</pre>
+    <button onclick="likeRiff(${riff.id})">Like</button>
+  `;
+
+  feed.appendChild(card);
+  enforceLimit();
+}
+
+// -------------------- MEMORY LIMIT --------------------
+function enforceLimit() {
+  const cards = feed.querySelectorAll(".card");
+  if (cards.length > 10) {
+    cards[0].remove();
+  }
+}
+
+// -------------------- FORMAT --------------------
+function formatTabs(tabs) {
+  return Object.entries(tabs)
+    .map(([string, notes]) => `${string} | ${notes}`)
+    .join("\n");
+}
+
+// -------------------- LIKE --------------------
+function likeRiff(id) {
+  fetch("http://127.0.0.1:8000/like", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ riff_id: id })
+  });
+}
+</script>
+
+</body>
+</html>
