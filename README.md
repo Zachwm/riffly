@@ -1,6 +1,6 @@
 # Riffly
 
-Riffly is a web-based project for CSE 499 focused on building a personalized guitar learning platform. The goal is to deliver short-form guitar riffs to users and explore how recommendation systems can improve engagement and learning.
+Riffly is a web-based project where I am building a personalized guitar learning platform. The goal is to deliver short-form guitar riffs to users and explore how recommendation systems can improve engagement and learning.
 
 ## Current Status
 
@@ -17,17 +17,23 @@ This project is in the early development phase. Current work is focused on:
 * Basic recommendation system (content-based)
 * Simple frontend for displaying a riff feed
 
-## Project Structure
-
-backend/ – FastAPI backend (in progress)  
-data/ – sample datasets  
-docs/ – diagrams and planning documents  
-
 ## Running the Project
 
-Instructions will be added as the backend is implemented.
+#### 1. Clone the repository
+```
+git clone <repo-url>
+cd riffly
+```
+#### 2. Start the backend server
+```
+uvicorn main:app --reload
+```
+Make sure you run this from the directory where main.py is located.  
+
+#### 3. Open the frontend
+
+Open index.html directly in your browser.
 
 ## Author
 
 Zachary McLaughlin
-CSE 499
