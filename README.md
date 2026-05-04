@@ -22,6 +22,8 @@ This project is in the early development phase. Current work is focused on:
 #### 1. Clone the repository
 ```
 git clone <repo-url>
+```
+```
 cd backend
 ```
 #### 2. Start the backend server
