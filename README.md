@@ -1,21 +1,139 @@
 # Riffly
 
-Riffly is a web-based project where I am building a personalized guitar learning platform. The goal is to deliver short-form guitar riffs to users and explore how recommendation systems can improve engagement and learning.
+Riffly is a web-based personalized guitar learning platform focused on delivering short-form guitar riffs through a scrollable feed experience. The project explores how recommendation systems and interaction-driven ranking can improve engagement and learning for beginner and intermediate guitar players.
+
+---
 
 ## Current Status
 
-This project is in the early development phase. Current work is focused on:
+The project is currently in early MVP development.
 
-* Researching recommendation systems
-* Designing data models
-* Building small backend prototypes
+Completed / In Progress:
+- Scrollable riff feed prototype
+- Structured riff metadata model
+- Initial backend setup with FastAPI
+- System architecture planning
+- Recommendation system research
 
-## Planned Components
+Current focus:
+- Backend API development
+- Database schema implementation
+- Interaction tracking
+- Recommendation prototype
 
-* Backend API (FastAPI)
-* Database for riffs, users, and interactions
-* Basic recommendation system (content-based)
-* Simple frontend for displaying a riff feed
+---
+
+## Tech Stack
+
+- Frontend: HTML, JavaScript
+- Backend: FastAPI (Python)
+- Database: PostgreSQL
+- Recommendation System: Content-based filtering
+- Version Control: Git + GitHub
+
+---
+
+## Planned Features
+
+- Infinite scrolling riff feed
+- User interaction tracking
+- Personalized recommendations
+- Guitar tab rendering
+- Difficulty and technique tagging
+- Authentication system
+- Recommendation scoring engine
+
+---
+
+# System Architecture
+
+```mermaid
+flowchart LR
+    U[User] --> F[Frontend Feed UI]
+
+    F -->|Fetch Riffs| A[FastAPI Backend]
+
+    A --> D[(PostgreSQL Database)]
+
+    D --> R[Riff Metadata]
+    D --> I[User Interactions]
+
+    R --> S[Recommendation Scoring]
+    I --> S
+
+    S --> A
+
+    subgraph Riff Data
+        T1[Tags]
+        T2[Techniques]
+        T3[Difficulty]
+        T4[Genre]
+        T5[BPM]
+        T6[Tabs]
+    end
+
+    R --> T1
+    R --> T2
+    R --> T3
+    R --> T4
+    R --> T5
+    R --> T6
+```
+
+---
+
+# User Interaction Flow
+
+```mermaid
+flowchart TD
+    A[Open Feed] --> B[View Riff]
+    B --> C{User Action}
+
+    C -->|Like| D[Store Positive Interaction]
+    C -->|Skip| E[Store Negative Interaction]
+    C -->|Complete| F[Store Completion]
+
+    D --> G[Update Recommendation Scores]
+    E --> G
+    F --> G
+
+    G --> H[Generate Personalized Feed]
+```
+
+---
+
+# Database Structure
+
+```mermaid
+erDiagram
+    USERS {
+        int id
+        string username
+        string skill_level
+    }
+
+    RIFFS {
+        int id
+        string title
+        string genre
+        int difficulty
+        int bpm
+    }
+
+    INTERACTIONS {
+        int id
+        int user_id
+        int riff_id
+        string interaction_type
+    }
+
+    USERS ||--o{ INTERACTIONS : creates
+    RIFFS ||--o{ INTERACTIONS : receives
+```
+
+---
+
+# Development Timeline
 
 ```mermaid
 gantt
@@ -29,7 +147,7 @@ gantt
     System Design & Flow Diagrams     :active, p3, 2026-05-04, 7d
 
     section Core Backend
-    FastAPI Backend Prototype         :p4, 2026-05-11, 7d
+    FastAPI Backend Prototype         :active, p4, 2026-05-11, 7d
     Recommendation Logic Prototype    :p5, 2026-05-18, 7d
     Scope & Feasibility Evaluation    :p6, 2026-05-18, 4d
 
@@ -43,7 +161,7 @@ gantt
     Interaction Tracking              :p11, 2026-06-22, 7d
 
     section Frontend
-    Functional Feed UI                :p12, 2026-06-29, 7d
+    Functional Feed UI                :active, p12, 2026-06-29, 7d
 
     section Finalization
     Recommendation System Complete    :p13, 2026-07-06, 7d
@@ -52,25 +170,57 @@ gantt
     todayMarker stroke-width:4px,stroke:#ff0000,opacity:0.7
 ```
 
-## Running the Project
+---
 
-#### 1. Clone the repository
+# Example Riff Data Structure
+
+```json
+{
+  "id": 1,
+  "title": "Blues Riff in A Minor",
+  "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
+  "video_url": "https://example.com/videos/riff1.mp4",
+  "difficulty": 2,
+  "bpm": 90,
+  "genre": "blues",
+  "tags": ["blues", "beginner", "minor"],
+  "techniques": ["hammer-on"],
+  "tabs": {
+    "e": "----------------|",
+    "B": "----------------|",
+    "G": "-----5h7--5-----|",
+    "D": "--7-------------|",
+    "A": "----------------|",
+    "E": "----------------|"
+  }
+}
 ```
+
+---
+
+# Running the Project
+
+## 1. Clone the Repository
+
+```bash
 git clone <repo-url>
 ```
-```
+
+## 2. Start the Backend
+
+```bash
 cd backend
-```
-#### 2. Start the backend server
-```
 uvicorn main:app --reload
 ```
-Make sure you run this from the directory where main.py is located.  
 
-#### 3. Open the frontend
+Run this command from the directory containing `main.py`.
 
-Open index.html directly in your browser.
+## 3. Open the Frontend
 
-## Author
+Open `index.html` directly in your browser.
+
+---
+
+# Author
 
 Zachary McLaughlin
