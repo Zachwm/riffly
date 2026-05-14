@@ -1,6 +1,6 @@
 # Riffly
 
-Riffly is a web-based personalized guitar learning platform focused on delivering short-form guitar riffs through a scrollable feed experience. The project explores how recommendation systems and interaction-driven ranking can improve engagement and learning for beginner and intermediate guitar players.
+Riffly is a web-based personalized guitar learning platform focused on delivering short-form guitar riffs through a scrollable feed experience. The project explores how content-based recommendation systems and interaction-driven ranking can improve engagement and learning for beginner and intermediate guitar players.
 
 ---
 
@@ -8,36 +8,37 @@ Riffly is a web-based personalized guitar learning platform focused on deliverin
 
 The project is currently in early MVP development.
 
-Completed / In Progress:
+### Completed / In Progress
 - Scrollable riff feed prototype
 - Structured riff metadata model
 - Initial backend setup with FastAPI
 - System architecture planning
 - Recommendation system research
 
-Current focus:
+### Current Focus
 - Backend API development
 - Database schema implementation
-- Interaction tracking
-- Recommendation prototype
+- Interaction tracking system
+- Recommendation system prototype
 
 ---
 
 ## Tech Stack
 
-- Frontend: HTML, JavaScript
-- Backend: FastAPI (Python)
-- Database: PostgreSQL
-- Recommendation System: Content-based filtering
-- Version Control: Git + GitHub
+- **Frontend:** HTML, JavaScript  
+- **Backend:** FastAPI (Python)  
+- **Database:** PostgreSQL  
+- **Recommendation System:** Content-based filtering (MVP, designed for future hybrid expansion)  
+- **Version Control:** Git + GitHub  
 
 ---
 
 ## Planned Features
 
 - Infinite scrolling riff feed
-- User interaction tracking
+- User interaction tracking (likes, skips, favorites, completions)
 - Personalized recommendations
+- Automatic audio preview playback while scrolling
 - Guitar tab rendering
 - Difficulty and technique tagging
 - Authentication system
@@ -58,29 +59,141 @@ flowchart LR
     D --> R[Riff Metadata]
     D --> I[User Interactions]
 
-    R --> S[Recommendation Scoring]
+    R --> S[Recommendation Scoring Engine]
     I --> S
 
     S --> A
-
-    subgraph Riff Data
-        T1[Tags]
-        T2[Techniques]
-        T3[Difficulty]
-        T4[Genre]
-        T5[BPM]
-        T6[Tabs]
-    end
-
-    R --> T1
-    R --> T2
-    R --> T3
-    R --> T4
-    R --> T5
-    R --> T6
 ```
 
 ---
+
+# Riff Data Model
+
+Each riff represents a short guitar learning snippet containing audio, optional video, and structured musical metadata.
+
+Core Riff Structure
+```json
+{
+  "id": 1,
+  "title": "Blues Riff in A Minor",
+  "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
+  "media": {
+    "audio_url": "https://example.com/audio/riff1.mp3",
+    "video_url": "https://example.com/videos/riff1.mp4"
+  },
+  "difficulty": 2,
+  "bpm": 90,
+  "genre": "blues",
+  "tags": ["blues", "beginner", "minor"],
+  "techniques": ["hammer-on"],
+  "tabs": {
+    "e": "----------------|",
+    "B": "----------------|",
+    "G": "-----5h7--5-----|",
+    "D": "--7-------------|",
+    "A": "----------------|",
+    "E": "----------------|"
+  }
+}
+```
+
+---
+
+# Database Design
+
+The database is structured around a feed-based recommendation system where user interactions serve as implicit feedback signals.
+
+Core Tables
+```mermaid
+erDiagram
+    USERS {
+        int id
+        string username
+        string skill_level
+        timestamp created_at
+    }
+
+    RIFFS {
+        int id
+        string title
+        string genre
+        int difficulty
+        int bpm
+        string audio_url
+        string video_url
+        timestamp created_at
+    }
+
+    INTERACTIONS {
+        int id
+        int user_id
+        int riff_id
+        string interaction_type
+        int duration_ms
+        timestamp created_at
+    }
+
+    RIFF_TAGS {
+        int riff_id
+        string tag
+    }
+
+    RIFF_TECHNIQUES {
+        int riff_id
+        string technique
+    }
+
+    USERS ||--o{ INTERACTIONS : creates
+    RIFFS ||--o{ INTERACTIONS : receives
+    RIFFS ||--o{ RIFF_TAGS : has
+    RIFFS ||--o{ RIFF_TECHNIQUES : includes
+```
+
+---
+
+# Data Model Philosophy
+
+The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings.
+
+Instead of relying on star ratings or manual feedback, the system uses implicit signals such as:
+
+- Interaction type (like, skip, complete)
+- Engagement duration (time spent on a riff)
+- Content similarity (tags, techniques, genre overlap)
+
+This allows the recommendation system to evolve from simple content filtering into behavior-driven ranking over time.
+
+---
+
+# Recommendation System
+
+The MVP recommendation system uses a content-based scoring approach that ranks riffs based on similarity to previously engaged content.
+
+## Ranking Signals
+
+### Content Features
+
+- Genre similarity
+- Technique overlap (e.g., hammer-ons, bends, slides)
+- Difficulty proximity
+- Tag matching
+
+### User Behavior Signals
+
+- Likes (positive signal)
+- Skips (negative signal)
+- Completions (strong positive signal)
+- Time spent on riff (implicit engagement weight)
+
+# MVP Scoring Approach
+
+Riffs are ranked using a weighted scoring function combining:
+
+- Content similarity to previously engaged riffs
+- Recency bias
+- Engagement strength from interaction history
+
+This system is designed to evolve into a hybrid or learning-to-rank model in future iterations.
 
 # User Interaction Flow
 
@@ -102,37 +215,6 @@ flowchart TD
 
 ---
 
-# Database Structure
-
-```mermaid
-erDiagram
-    USERS {
-        int id
-        string username
-        string skill_level
-    }
-
-    RIFFS {
-        int id
-        string title
-        string genre
-        int difficulty
-        int bpm
-    }
-
-    INTERACTIONS {
-        int id
-        int user_id
-        int riff_id
-        string interaction_type
-    }
-
-    USERS ||--o{ INTERACTIONS : creates
-    RIFFS ||--o{ INTERACTIONS : receives
-```
-
----
-
 # Development Timeline
 
 ```mermaid
@@ -143,57 +225,31 @@ gantt
 
     section Planning
     Project Planning & Research        :done, p1, 2026-04-20, 7d
-    Tutorials / Dataset Gathering     :done, p2, 2026-04-27, 7d
-    System Design & Flow Diagrams     :active, p3, 2026-05-04, 7d
+    Tutorials / Dataset Gathering       :done, p2, 2026-04-27, 7d
+    System Design & Flow Diagrams       :active, p3, 2026-05-04, 7d
 
     section Core Backend
-    FastAPI Backend Prototype         :active, p4, 2026-05-11, 7d
-    Recommendation Logic Prototype    :p5, 2026-05-18, 7d
-    Scope & Feasibility Evaluation    :p6, 2026-05-18, 4d
+    FastAPI Backend Prototype           :active, p4, 2026-05-11, 7d
+    Recommendation Logic Prototype      :p5, 2026-05-18, 7d
+    Scope & Feasibility Evaluation      :p6, 2026-05-18, 4d
 
     section Documentation
-    Software Requirements Spec (SRS) :p7, 2026-05-25, 7d
+    Software Requirements Spec (SRS)    :p7, 2026-05-25, 7d
 
     section Backend Systems
-    Final Database Schema             :p8, 2026-06-01, 7d
-    Full Backend API                  :p9, 2026-06-08, 14d
-    User Authentication               :p10, 2026-06-15, 7d
-    Interaction Tracking              :p11, 2026-06-22, 7d
+    Final Database Schema               :p8, 2026-06-01, 7d
+    Full Backend API                    :p9, 2026-06-08, 14d
+    User Authentication                 :p10, 2026-06-15, 7d
+    Interaction Tracking                :p11, 2026-06-22, 7d
 
     section Frontend
-    Functional Feed UI                :active, p12, 2026-06-29, 7d
+    Functional Feed UI                  :active, p12, 2026-06-29, 7d
 
     section Finalization
-    Recommendation System Complete    :p13, 2026-07-06, 7d
-    Final Demo Prep                   :p14, 2026-07-13, 7d
+    Recommendation System Complete       :p13, 2026-07-06, 7d
+    Final Demo Prep                     :p14, 2026-07-13, 7d
 
     todayMarker stroke-width:4px,stroke:#ff0000,opacity:0.7
-```
-
----
-
-# Example Riff Data Structure
-
-```json
-{
-  "id": 1,
-  "title": "Blues Riff in A Minor",
-  "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
-  "video_url": "https://example.com/videos/riff1.mp4",
-  "difficulty": 2,
-  "bpm": 90,
-  "genre": "blues",
-  "tags": ["blues", "beginner", "minor"],
-  "techniques": ["hammer-on"],
-  "tabs": {
-    "e": "----------------|",
-    "B": "----------------|",
-    "G": "-----5h7--5-----|",
-    "D": "--7-------------|",
-    "A": "----------------|",
-    "E": "----------------|"
-  }
-}
 ```
 
 ---
