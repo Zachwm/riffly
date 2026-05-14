@@ -27,9 +27,13 @@ The project is currently in early MVP development.
 
 - **Frontend:** HTML, JavaScript  
 - **Backend:** FastAPI (Python)  
-- **Database:** PostgreSQL  
-- **Recommendation System:** Content-based filtering (MVP, designed for future hybrid expansion)  
-- **Version Control:** Git + GitHub  
+- **Database:** PostgreSQL
+- **Recommendation System:** Content-based filtering (MVP; extensible to hybrid or learning-to-rank models)
+- **Version Control:** Git + GitHub
+
+## Project Goal
+
+To explore how real-time interaction signals can be used to drive personalized learning in a short-form, feed-based educational system.
 
 ---
 
@@ -46,7 +50,7 @@ The project is currently in early MVP development.
 
 ---
 
-# System Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
@@ -67,11 +71,11 @@ flowchart LR
 
 ---
 
-# Riff Data Model
+## Riff Data Model
 
 Each riff represents a short guitar learning snippet containing audio, optional video, and structured musical metadata.
 
-Core Riff Structure
+### Core Riff Structure
 ```json
 {
   "id": 1,
@@ -99,11 +103,11 @@ Core Riff Structure
 
 ---
 
-# Database Design
+## Database Design
 
-The database is structured around a feed-based recommendation system where user interactions serve as implicit feedback signals.
+The database supports a feed-based recommendation system driven by user interactions.
 
-Core Tables
+### Core Tables
 ```mermaid
 erDiagram
     USERS {
@@ -151,7 +155,7 @@ erDiagram
 
 ---
 
-# Data Model Philosophy
+## Data Model Philosophy
 
 The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings.
 
@@ -165,27 +169,27 @@ This allows the recommendation system to evolve from simple content filtering in
 
 ---
 
-# Recommendation System
+## Recommendation System
 
 The MVP recommendation system uses a content-based scoring approach that ranks riffs based on similarity to previously engaged content.
 
-## Ranking Signals
+### Ranking Signals
 
-### Content Features
+#### Content Features
 
 - Genre similarity
 - Technique overlap (e.g., hammer-ons, bends, slides)
 - Difficulty proximity
 - Tag matching
 
-### User Behavior Signals
+#### User Behavior Signals
 
 - Likes (positive signal)
 - Skips (negative signal)
 - Completions (strong positive signal)
 - Time spent on riff (implicit engagement weight)
 
-# MVP Scoring Approach
+### MVP Scoring Approach
 
 Riffs are ranked using a weighted scoring function combining:
 
@@ -195,8 +199,9 @@ Riffs are ranked using a weighted scoring function combining:
 
 This system is designed to evolve into a hybrid or learning-to-rank model in future iterations.
 
-# User Interaction Flow
+## User Interaction Flow
 
+### Interaction Flow Diagram
 ```mermaid
 flowchart TD
     A[Open Feed] --> B[View Riff]
@@ -215,7 +220,7 @@ flowchart TD
 
 ---
 
-# Development Timeline
+## Development Timeline
 
 ```mermaid
 gantt
