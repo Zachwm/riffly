@@ -10,24 +10,41 @@
 <div class="feed" id="feed"></div>
 
 <script>
+let sessionId = crypto.randomUUID();
+
 const feed = document.getElementById("feed");
 
 let loading = false;
+
+// IMPORTANT: prevents duplicate rendering
+const seen = new Set();
 
 // -------------------- INIT --------------------
 initFeed();
 
 async function initFeed() {
   const riff1 = await fetchRiff();
-  addRiffCard(riff1);
+
+  if (!seen.has(riff1.id)) {
+    seen.add(riff1.id);
+    await markViewed(riff1.id);
+    addRiffCard(riff1);
+  }
 
   const riff2 = await fetchRiff();
-  addRiffCard(riff2);
+
+  if (!seen.has(riff2.id)) {
+    seen.add(riff2.id);
+    await markViewed(riff2.id);
+    addRiffCard(riff2);
+  }
 }
 
 // -------------------- FETCH --------------------
 async function fetchRiff() {
-  const res = await fetch("http://127.0.0.1:8000/next-riff");
+  const res = await fetch(
+    "http://127.0.0.1:8000/next-riff?session_id=" + sessionId
+  );
   return await res.json();
 }
 
@@ -42,21 +59,45 @@ feed.addEventListener("scrollend", async () => {
   const feedRect = feed.getBoundingClientRect();
   const lastRect = lastCard.getBoundingClientRect();
 
-  // fire when last card is within one viewport height of being visible
   if (lastRect.top < feedRect.bottom + feedRect.height) {
     loading = true;
+
     try {
-  const riff = await fetchRiff();
-  addRiffCard(riff);
-} catch (err) {
-  console.error("Failed to load riff", err);
-} finally {
-  loading = false;
-}
+      const riff = await fetchRiff();
+
+      if (seen.has(riff.id)) {
+        loading = false;
+        return;
+      }
+
+      seen.add(riff.id);
+      await markViewed(riff.id);
+      addRiffCard(riff);
+
+    } catch (err) {
+      console.error("Failed to load riff", err);
+    } finally {
+      loading = false;
+    }
   }
 });
 
 // -------------------- RENDER --------------------
+async function markViewed(id) {
+  await fetch("http://127.0.0.1:8000/interact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      riff_id: id,
+      interaction_type: "view",
+      duration_ms: null,
+      session_id: sessionId
+    })
+  });
+}
+
 function addRiffCard(riff) {
   const card = document.createElement("div");
   card.className = "card";
@@ -93,12 +134,16 @@ function formatTabs(tabs) {
 
 // -------------------- LIKE --------------------
 function likeRiff(id) {
-  fetch("http://127.0.0.1:8000/like", {
+  fetch("http://127.0.0.1:8000/interact", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ riff_id: id })
+    body: JSON.stringify({
+      riff_id: id,
+      interaction_type: "like",
+      session_id: sessionId
+    })
   });
 }
 </script>

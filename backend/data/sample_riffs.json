@@ -2,96 +2,183 @@
   {
     "id": 1,
     "title": "Blues Riff in A Minor",
-    "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
+    "description": "Simple minor blues riff using hammer-ons.",
     "video_url": "https://example.com/videos/riff1.mp4",
     "difficulty": 2,
     "bpm": 90,
     "genre": "blues",
     "tags": ["blues", "beginner", "minor"],
     "techniques": ["hammer-on"],
-    "tabs": {
-      "e": "----------------|",
-      "B": "----------------|",
-      "G": "-----5h7--5-----|",
-      "D": "--7-------------|",
-      "A": "----------------|",
-      "E": "----------------|"
-    }
+    "tabs": { "e": "----------------|", "B": "----------------|", "G": "-----5h7--5-----|", "D": "--7-------------|", "A": "----------------|", "E": "----------------|" }
   },
   {
     "id": 2,
-    "title": "Rock Power Riff",
-    "description": "Basic rock riff using power chords and steady rhythm.",
+    "title": "Rock Power Chord Drive",
+    "description": "Straight aggressive rock rhythm.",
     "video_url": "https://example.com/videos/riff2.mp4",
     "difficulty": 2,
     "bpm": 110,
     "genre": "rock",
     "tags": ["rock", "power-chords", "beginner"],
     "techniques": ["strumming"],
-    "tabs": {
-      "e": "----------------|",
-      "B": "----------------|",
-      "G": "----------------|",
-      "D": "--2--2--4--2----|",
-      "A": "--2--2--4--2----|",
-      "E": "--0--0--2--0----|"
-    }
+    "tabs": { "e": "----------------|", "B": "----------------|", "G": "----------------|", "D": "--2--2--4--2----|", "A": "--2--2--4--2----|", "E": "--0--0--2--0----|" }
   },
   {
     "id": 3,
-    "title": "Clean Slide Riff",
-    "description": "Smooth slide-based melodic riff in E minor.",
+    "title": "Ambient Slide Texture",
+    "description": "E minor atmospheric slide riff.",
     "video_url": "https://example.com/videos/riff3.mp4",
     "difficulty": 3,
     "bpm": 100,
     "genre": "ambient",
-    "tags": ["slide", "melodic", "emotional"],
+    "tags": ["ambient", "slide", "emotional"],
     "techniques": ["slide"],
-    "tabs": {
-      "e": "----------------|",
-      "B": "------5/7-------|",
-      "G": "----4/6---------|",
-      "D": "--2-------------|",
-      "A": "----------------|",
-      "E": "----------------|"
-    }
+    "tabs": { "e": "----------------|", "B": "------5/7-------|", "G": "----4/6---------|", "D": "--2-------------|", "A": "----------------|", "E": "----------------|" }
   },
   {
     "id": 4,
-    "title": "Pentatonic Lead Lick",
-    "description": "Simple lead lick using minor pentatonic scale.",
+    "title": "Pentatonic Blues Lick",
+    "description": "Lead lick using bends.",
     "video_url": "https://example.com/videos/riff4.mp4",
     "difficulty": 3,
     "bpm": 95,
     "genre": "blues",
-    "tags": ["lead", "pentatonic", "solo"],
+    "tags": ["blues", "lead", "solo"],
     "techniques": ["bend"],
-    "tabs": {
-      "e": "----------------|",
-      "B": "----8b10--8-----|",
-      "G": "--7-------------|",
-      "D": "----------------|",
-      "A": "----------------|",
-      "E": "----------------|"
-    }
+    "tabs": { "e": "----------------|", "B": "----8b10--8-----|", "G": "--7-------------|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
   },
   {
     "id": 5,
-    "title": "Beginner Funk Groove",
-    "description": "Simple muted funk rhythm with steady groove.",
+    "title": "Funk Muted Groove",
+    "description": "Syncopated funk rhythm.",
     "video_url": "https://example.com/videos/riff5.mp4",
     "difficulty": 2,
     "bpm": 105,
     "genre": "funk",
-    "tags": ["funk", "rhythm", "muted"],
+    "tags": ["funk", "muted", "rhythm"],
     "techniques": ["palm-mute"],
-    "tabs": {
-      "e": "x-x-x-x-x-x-----|",
-      "B": "x-x-x-x-x-x-----|",
-      "G": "--2--2--2--2----|",
-      "D": "--2--2--2--2----|",
-      "A": "----------------|",
-      "E": "----------------|"
-    }
+    "tabs": { "e": "x-x-x-x-x-x-----|", "B": "x-x-x-x-x-x-----|", "G": "--2--2--2--2----|", "D": "--2--2--2--2----|", "A": "----------------|", "E": "----------------|" }
+  },
+
+  {
+    "id": 6,
+    "title": "Metal Gallop Riff",
+    "description": "Fast palm-muted metal gallop pattern.",
+    "video_url": "https://example.com/videos/riff6.mp4",
+    "difficulty": 4,
+    "bpm": 160,
+    "genre": "metal",
+    "tags": ["metal", "fast", "palm-mute"],
+    "techniques": ["palm-mute"],
+    "tabs": { "e": "----------------|", "B": "----------------|", "G": "----------------|", "D": "--0-0-0-3-0-0---|", "A": "--0-0-0-3-0-0---|", "E": "--0-0-0-3-0-0---|" }
+  },
+  {
+    "id": 7,
+    "title": "Indie Clean Arpeggio",
+    "description": "Clean emotional picking pattern.",
+    "video_url": "https://example.com/videos/riff7.mp4",
+    "difficulty": 2,
+    "bpm": 85,
+    "genre": "indie",
+    "tags": ["indie", "clean", "arpeggio"],
+    "techniques": ["fingerpicking"],
+    "tabs": { "e": "------0---------|", "B": "----1---1-------|", "G": "--0-------0-----|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 8,
+    "title": "Jazz Turnaround",
+    "description": "Smooth jazz chord movement.",
+    "video_url": "https://example.com/videos/riff8.mp4",
+    "difficulty": 4,
+    "bpm": 120,
+    "genre": "jazz",
+    "tags": ["jazz", "chords", "complex"],
+    "techniques": ["chord-melody"],
+    "tabs": { "e": "--5---7---5-----|", "B": "--5---6---5-----|", "G": "--5---5---5-----|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 9,
+    "title": "Pop Hook Melody",
+    "description": "Catchy simple pop lead line.",
+    "video_url": "https://example.com/videos/riff9.mp4",
+    "difficulty": 1,
+    "bpm": 100,
+    "genre": "pop",
+    "tags": ["pop", "simple", "melody"],
+    "techniques": ["hammer-on"],
+    "tabs": { "e": "----------------|", "B": "----3h5--3------|", "G": "----------------|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 10,
+    "title": "Blues Shuffle Groove",
+    "description": "Classic shuffle rhythm.",
+    "video_url": "https://example.com/videos/riff10.mp4",
+    "difficulty": 2,
+    "bpm": 95,
+    "genre": "blues",
+    "tags": ["blues", "shuffle", "rhythm"],
+    "techniques": ["strumming"],
+    "tabs": { "e": "----------------|", "B": "----------------|", "G": "--5--5--5-------|", "D": "--5--5--5-------|", "A": "--3--3--3-------|", "E": "----------------|" }
+  },
+
+  {
+    "id": 11,
+    "title": "Metal Lead Sweep",
+    "description": "Fast sweep picking idea.",
+    "video_url": "https://example.com/videos/riff11.mp4",
+    "difficulty": 5,
+    "bpm": 140,
+    "genre": "metal",
+    "tags": ["metal", "sweep", "advanced"],
+    "techniques": ["sweep"],
+    "tabs": { "e": "------12-15-----|", "B": "----13----------|", "G": "--12------------|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 12,
+    "title": "Funk Clav Groove",
+    "description": "Sharper funk rhythm pattern.",
+    "video_url": "https://example.com/videos/riff12.mp4",
+    "difficulty": 3,
+    "bpm": 110,
+    "genre": "funk",
+    "tags": ["funk", "groove", "syncopated"],
+    "techniques": ["muting"],
+    "tabs": { "e": "x-x-x-x---------|", "B": "x-x-x-x---------|", "G": "--7--7----------|", "D": "--5--5----------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 13,
+    "title": "Acoustic Fingerstyle Flow",
+    "description": "Soft repeating fingerstyle pattern.",
+    "video_url": "https://example.com/videos/riff13.mp4",
+    "difficulty": 2,
+    "bpm": 80,
+    "genre": "acoustic",
+    "tags": ["acoustic", "fingerstyle", "calm"],
+    "techniques": ["fingerpicking"],
+    "tabs": { "e": "------0---------|", "B": "----1---1-------|", "G": "--2-------2-----|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
+  },
+  {
+    "id": 14,
+    "title": "Rock Anthem Riff",
+    "description": "Big stadium rock energy.",
+    "video_url": "https://example.com/videos/riff14.mp4",
+    "difficulty": 2,
+    "bpm": 115,
+    "genre": "rock",
+    "tags": ["rock", "anthem", "power"],
+    "techniques": ["strumming"],
+    "tabs": { "e": "----------------|", "B": "----------------|", "G": "--9--9--7-------|", "D": "--9--9--7-------|", "A": "--7--7--5-------|", "E": "----------------|" }
+  },
+  {
+    "id": 15,
+    "title": "Jazz Blues Walk",
+    "description": "Walking jazz-blues hybrid line.",
+    "video_url": "https://example.com/videos/riff15.mp4",
+    "difficulty": 4,
+    "bpm": 125,
+    "genre": "jazz",
+    "tags": ["jazz", "blues", "walking"],
+    "techniques": ["chord-melody"],
+    "tabs": { "e": "--5--6--7-------|", "B": "--5--5--5-------|", "G": "--5--5--5-------|", "D": "----------------|", "A": "----------------|", "E": "----------------|" }
   }
 ]
