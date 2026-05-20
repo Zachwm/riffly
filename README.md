@@ -6,47 +6,45 @@ Riffly is a web-based personalized guitar learning platform focused on deliverin
 
 ## Current Status
 
-The project is currently in early MVP development.
+The project is in active MVP development.
 
-### Completed / In Progress
-- Scrollable riff feed prototype
-- Structured riff metadata model
-- Initial backend setup with FastAPI
-- System architecture planning
-- Recommendation system research
-
-### Current Focus
-- Backend API development
+### Completed
+- Scrollable riff feed with infinite scroll and lookahead loading
+- Automatic view tracking on card render
+- Like interaction wired to backend
+- Session-based identity (no login required)
+- DOM memory cap (10 cards max)
+- FastAPI backend with PostgreSQL integration
 - Database schema implementation
-- Interaction tracking system
-- Recommendation system prototype
+- Interaction tracking system (session-based)
+- Content-based recommendation engine (MVP)
+
+### In Progress
+- Scope and feasibility evaluation
+- Software Requirements Spec (SRS)
+
+### Planned
+- Skip interaction
+- Audio preview playback on scroll
+- Guitar tab rendering (styled)
+- Difficulty and technique tagging UI
+- User authentication
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** HTML, JavaScript  
-- **Backend:** FastAPI (Python)  
-- **Database:** PostgreSQL
+- **Frontend:** HTML, JavaScript (no framework)
+- **Backend:** FastAPI (Python)
+- **Database:** PostgreSQL (via SQLAlchemy)
 - **Recommendation System:** Content-based filtering (MVP; extensible to hybrid or learning-to-rank models)
 - **Version Control:** Git + GitHub
+
+---
 
 ## Project Goal
 
 To explore how real-time interaction signals can be used to drive personalized learning in a short-form, feed-based educational system.
-
----
-
-## Planned Features
-
-- Infinite scrolling riff feed
-- User interaction tracking (likes, skips, favorites, completions)
-- Personalized recommendations
-- Automatic audio preview playback while scrolling
-- Guitar tab rendering
-- Difficulty and technique tagging
-- Authentication system
-- Recommendation scoring engine
 
 ---
 
@@ -56,7 +54,9 @@ To explore how real-time interaction signals can be used to drive personalized l
 flowchart LR
     U[User] --> F[Frontend Feed UI]
 
-    F -->|Fetch Riffs| A[FastAPI Backend]
+    F -->|GET /next-riff| A[FastAPI Backend]
+    F -->|POST /interact - view| A
+    F -->|POST /interact - like| A
 
     A --> D[(PostgreSQL Database)]
 
@@ -71,11 +71,77 @@ flowchart LR
 
 ---
 
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/riffs` | Returns all riffs |
+| `POST` | `/interact` | Records a user interaction |
+| `GET` | `/next-riff?session_id=` | Returns the next recommended riff for a session |
+
+### Interaction Request Body
+
+```json
+{
+  "riff_id": 1,
+  "interaction_type": "like",
+  "duration_ms": 4200,
+  "session_id": "abc123"
+}
+```
+
+`duration_ms` is optional. Currently only `view` and `like` are sent by the frontend.
+
+---
+
+## Frontend
+
+### Session Identity
+
+A session ID is generated on page load using `crypto.randomUUID()` and attached to every interaction request. No login is required.
+
+```js
+let sessionId = crypto.randomUUID();
+```
+
+### Feed Loading
+
+The feed pre-loads two riffs on init, then uses a `scrollend` listener with a lookahead threshold to fetch the next riff before the user reaches the bottom.
+
+```
+feedRect.bottom + feedRect.height  ← triggers load before last card is reached
+```
+
+A `seen` Set prevents duplicate cards from rendering if the same riff ID is returned.
+
+### Interaction Tracking
+
+| Interaction | Trigger |
+|-------------|---------|
+| `view` | Fired automatically when a card is added to the DOM |
+| `like` | Fired when the user clicks the Like button |
+
+Skip is not yet implemented on the frontend.
+
+### DOM Memory Cap
+
+To avoid unbounded DOM growth during long sessions, cards are pruned from the top of the feed once the count exceeds 10.
+
+```js
+function enforceLimit() {
+  const cards = feed.querySelectorAll(".card");
+  if (cards.length > 10) {
+    cards[0].remove();
+  }
+}
+```
+
+---
+
 ## Riff Data Model
 
 Each riff represents a short guitar learning snippet containing audio, optional video, and structured musical metadata.
 
-### Core Riff Structure
 ```json
 {
   "id": 1,
@@ -105,9 +171,6 @@ Each riff represents a short guitar learning snippet containing audio, optional 
 
 ## Database Design
 
-The database supports a feed-based recommendation system driven by user interactions.
-
-### Core Tables
 ```mermaid
 erDiagram
     USERS {
@@ -131,6 +194,7 @@ erDiagram
     INTERACTIONS {
         int id
         int user_id
+        string session_id
         int riff_id
         string interaction_type
         int duration_ms
@@ -153,70 +217,53 @@ erDiagram
     RIFFS ||--o{ RIFF_TECHNIQUES : includes
 ```
 
----
-
-## Data Model Philosophy
-
-The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings.
-
-Instead of relying on star ratings or manual feedback, the system uses implicit signals such as:
-
-- Interaction type (like, skip, complete)
-- Engagement duration (time spent on a riff)
-- Content similarity (tags, techniques, genre overlap)
-
-This allows the recommendation system to evolve from simple content filtering into behavior-driven ranking over time.
+> **Note:** User authentication is not yet implemented. Interactions are tracked by `session_id`, with `user_id` hardcoded to `1` during the MVP phase.
 
 ---
 
 ## Recommendation System
 
-The MVP recommendation system uses a content-based scoring approach that ranks riffs based on similarity to previously engaged content.
+The MVP recommendation system scores unseen riffs based on interaction history within the current session, then returns the highest-scoring one.
 
-### Ranking Signals
+### Scoring Table
 
-#### Content Features
+| Signal | Score Delta | Notes |
+|--------|-------------|-------|
+| Riff genre matches a liked riff's genre | `+0.5` | Applied to all unseen riffs in that genre |
+| `view` interaction on riff | `+0.1` | Mild positive signal |
+| `like` interaction on riff | `+3.0` | Strong positive signal |
 
-- Genre similarity
-- Technique overlap (e.g., hammer-ons, bends, slides)
-- Difficulty proximity
-- Tag matching
+Riffs that have already received any interaction are excluded entirely from recommendations.
 
-#### User Behavior Signals
+### Interaction Flow
 
-- Likes (positive signal)
-- Skips (negative signal)
-- Completions (strong positive signal)
-- Time spent on riff (implicit engagement weight)
-
-### MVP Scoring Approach
-
-Riffs are ranked using a weighted scoring function combining:
-
-- Content similarity to previously engaged riffs
-- Recency bias
-- Engagement strength from interaction history
-
-This system is designed to evolve into a hybrid or learning-to-rank model in future iterations.
-
-## User Interaction Flow
-
-### Interaction Flow Diagram
 ```mermaid
 flowchart TD
-    A[Open Feed] --> B[View Riff]
+    A[Open Feed] --> B[View Riff - auto-tracked]
     B --> C{User Action}
 
-    C -->|Like| D[Store Positive Interaction]
-    C -->|Skip| E[Store Negative Interaction]
-    C -->|Complete| F[Store Completion]
+    C -->|Like| D[Store like interaction]
+    C -->|Scroll past| E[No signal yet - skip not implemented]
 
     D --> G[Update Recommendation Scores]
     E --> G
-    F --> G
 
-    G --> H[Generate Personalized Feed]
+    G --> H[Return next highest-scoring unseen riff]
 ```
+
+### Future Directions
+
+- Skip as a negative signal
+- Completion and `duration_ms` as engagement weight
+- Technique and tag overlap scoring
+- Difficulty proximity weighting
+- Hybrid or learning-to-rank model
+
+---
+
+## Data Model Philosophy
+
+The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings. Rather than star ratings or manual feedback, it uses implicit signals — interaction type, engagement duration, and content similarity — allowing the recommendation engine to evolve from simple content filtering into behavior-driven ranking over time.
 
 ---
 
@@ -231,12 +278,12 @@ gantt
     section Planning
     Project Planning & Research        :done, p1, 2026-04-20, 7d
     Tutorials / Dataset Gathering       :done, p2, 2026-04-27, 7d
-    System Design & Flow Diagrams       :active, p3, 2026-05-04, 7d
+    System Design & Flow Diagrams       :done, p3, 2026-05-04, 7d
 
     section Core Backend
-    FastAPI Backend Prototype           :active, p4, 2026-05-11, 7d
-    Recommendation Logic Prototype      :p5, 2026-05-18, 7d
-    Scope & Feasibility Evaluation      :p6, 2026-05-18, 4d
+    FastAPI Backend Prototype           :done, p4, 2026-05-11, 7d
+    Recommendation Logic Prototype      :done, p5, 2026-05-18, 7d
+    Scope & Feasibility Evaluation      :active, p6, 2026-05-18, 4d
 
     section Documentation
     Software Requirements Spec (SRS)    :p7, 2026-05-25, 7d
@@ -259,29 +306,30 @@ gantt
 
 ---
 
-# Running the Project
+## Running the Project
 
-## 1. Clone the Repository
-
-```bash
-git clone <repo-url>
-```
-
-## 2. Start the Backend
+### 1. Clone the Repository
 
 ```bash
-cd backend
-uvicorn main:app --reload
+git clone https://github.com/Zachwm/riffly
 ```
 
-Run this command from the directory containing `main.py`.
+### 2. Set Up the Database
 
-## 3. Open the Frontend
+Make sure PostgreSQL is running and create your database. Update the connection string in `backend/database.py`.
+
+### 3. Start the Backend
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+### 4. Open the Frontend
 
 Open `index.html` directly in your browser.
 
 ---
 
-# Author
+## Author
 
 Zachary McLaughlin
