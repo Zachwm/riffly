@@ -2,9 +2,10 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from fastapi.encoders import jsonable_encoder
 
-from backend.database import SessionLocal
-from backend.models import Riff, Interaction
+from backend.core.database import SessionLocal
+from backend.core.models import Riff, Interaction
 
 app = FastAPI()
 
@@ -15,7 +16,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -------------------------
 # DB Dependency
@@ -29,13 +29,17 @@ def get_db():
 
 
 # -------------------------
-# GET RIFFS
+# GET ALL RIFFS
 # -------------------------
 @app.get("/riffs")
 def get_riffs(db: Session = Depends(get_db)):
-    return db.query(Riff).all()
+    riffs = db.query(Riff).all()
+    return jsonable_encoder(riffs)
 
 
+# -------------------------
+# INTERACTION MODEL
+# -------------------------
 class InteractionRequest(BaseModel):
     riff_id: int
     interaction_type: str
@@ -75,10 +79,11 @@ def next_riff(session_id: str, db: Session = Depends(get_db)):
         Interaction.session_id == session_id
     ).all()
 
+    # score map
     scores = {r.id: 0 for r in riffs}
 
     # -------------------------
-    # 1. LIKED GENRES
+    # liked genres
     # -------------------------
     liked_genres = {
         r.genre
@@ -88,35 +93,29 @@ def next_riff(session_id: str, db: Session = Depends(get_db)):
         and (i.interaction_type or "").strip().lower() == "like"
     }
 
-    # -------------------------
-    # 2. GENRE BOOST
-    # -------------------------
+    # genre boost
     for r in riffs:
         if r.genre in liked_genres:
             scores[r.id] += 0.5
 
-    # -------------------------
-    # 3. DIRECT INTERACTIONS
-    # -------------------------
+    # direct interaction scoring
     for i in interactions:
         t = (i.interaction_type or "").strip().lower()
 
         if t == "view":
             scores[i.riff_id] += 0.1
-
         elif t == "like":
             scores[i.riff_id] += 3
 
-    # -------------------------
-    # 4. REMOVE SEEN
-    # -------------------------
+    # remove seen riffs
     seen_ids = {i.riff_id for i in interactions}
     unseen = [r for r in riffs if r.id not in seen_ids]
 
     if not unseen:
         return {"message": "no new riffs"}
 
-    # -------------------------
-    # 5. RANK
-    # -------------------------
-    return max(unseen, key=lambda r: scores.get(r.id, 0))
+    # pick best unseen riff
+    best = max(unseen, key=lambda r: scores.get(r.id, 0))
+
+    # IMPORTANT: serialize for frontend event system
+    return jsonable_encoder(best)

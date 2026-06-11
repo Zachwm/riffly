@@ -11,13 +11,18 @@ The project is in active MVP development.
 ### Completed
 - Scrollable riff feed with infinite scroll and lookahead loading
 - Automatic view tracking on card render
-- Like interaction wired to backend
+- Like and Save interactions wired to backend
 - Session-based identity (no login required)
-- DOM memory cap (10 cards max)
+- Duplicate prevention via `seen` Set (client-side)
 - FastAPI backend with PostgreSQL integration
 - Database schema implementation
 - Interaction tracking system (session-based)
 - Content-based recommendation engine (MVP)
+- Animated fretboard note renderer with playhead
+- Difficulty-based color theming
+- Tone.js audio playback (PolySynth, triangle oscillator)
+- Pause/resume on tap
+- Splash screen with audio context initialization
 
 ### In Progress
 - Scope and feasibility evaluation
@@ -34,7 +39,7 @@ The project is in active MVP development.
 
 ## Tech Stack
 
-- **Frontend:** HTML, JavaScript (no framework)
+- **Frontend:** React (functional components + hooks), Tone.js
 - **Backend:** FastAPI (Python)
 - **Database:** PostgreSQL (via SQLAlchemy)
 - **Recommendation System:** Content-based filtering (MVP; extensible to hybrid or learning-to-rank models)
@@ -57,6 +62,7 @@ flowchart LR
     F -->|GET /next-riff| A[FastAPI Backend]
     F -->|POST /interact - view| A
     F -->|POST /interact - like| A
+    F -->|POST /interact - save| A
 
     A --> D[(PostgreSQL Database)]
 
@@ -90,7 +96,7 @@ flowchart LR
 }
 ```
 
-`duration_ms` is optional. Currently only `view` and `like` are sent by the frontend.
+`duration_ms` is optional. Currently `view`, `like`, `unlike`, `save`, and `unsave` are sent by the frontend.
 
 ---
 
@@ -101,71 +107,74 @@ flowchart LR
 A session ID is generated on page load using `crypto.randomUUID()` and attached to every interaction request. No login is required.
 
 ```js
-let sessionId = crypto.randomUUID();
+const sessionId = useRef(crypto.randomUUID());
 ```
 
 ### Feed Loading
 
-The feed pre-loads two riffs on init, then uses a `scrollend` listener with a lookahead threshold to fetch the next riff before the user reaches the bottom.
+The feed pre-loads two riffs on init, then uses a `scroll` event listener with a lookahead threshold to fetch the next riff before the user reaches the bottom.
 
 ```
-feedRect.bottom + feedRect.height  ← triggers load before last card is reached
+scrollHeight - scrollTop - clientHeight < clientHeight * 0.5  ← triggers load
 ```
 
-A `seen` Set prevents duplicate cards from rendering if the same riff ID is returned.
+A `seen` Set prevents duplicate cards from rendering if the same riff ID is returned. A `lockRef` prevents concurrent fetch calls during scroll.
 
 ### Interaction Tracking
 
 | Interaction | Trigger |
 |-------------|---------|
 | `view` | Fired automatically when a card is added to the DOM |
-| `like` | Fired when the user clicks the Like button |
+| `like` / `unlike` | Fired when the user clicks the Like button |
+| `save` / `unsave` | Fired when the user clicks the Save button |
 
-Skip is not yet implemented on the frontend.
+Skip is not yet implemented.
 
-### DOM Memory Cap
+### Playback
 
-To avoid unbounded DOM growth during long sessions, cards are pruned from the top of the feed once the count exceeds 10.
+Each `RiffCard` runs a `setInterval` loop (16ms) that:
+- Advances playback time using `performance.now()`
+- Loops seamlessly based on riff duration
+- Triggers Tone.js note events via `triggerAttackRelease` at the correct beat offset
+- Pauses and resumes on tap, preserving playback position via `pausedTimeRef`
 
-```js
-function enforceLimit() {
-  const cards = feed.querySelectorAll(".card");
-  if (cards.length > 10) {
-    cards[0].remove();
-  }
-}
+Audio uses a `PolySynth` with a triangle oscillator per card, disposed on unmount.
+
+### Fretboard Renderer
+
+Notes scroll from right to left past a fixed playhead. Position is calculated per-frame:
+
 ```
+x = (note.start × PX_PER_BEAT) - (time - LEAD_IN) × SPEED + PLAYHEAD_X
+```
+
+A 3-beat lead-in gives the user time to prepare before the first note hits the playhead. Active notes scale up and glow.
 
 ---
 
 ## Riff Data Model
 
-Each riff represents a short guitar learning snippet containing audio, optional video, and structured musical metadata.
+Each riff represents a short guitar learning snippet containing structured musical metadata and a list of timed note events.
 
 ```json
 {
   "id": 1,
   "title": "Blues Riff in A Minor",
-  "description": "Simple minor blues riff using hammer-ons and a pentatonic shape.",
-  "media": {
-    "audio_url": "https://example.com/audio/riff1.mp3",
-    "video_url": "https://example.com/videos/riff1.mp4"
-  },
+  "genre": "blues",
   "difficulty": 2,
   "bpm": 90,
-  "genre": "blues",
+  "key": "A minor",
   "tags": ["blues", "beginner", "minor"],
-  "techniques": ["hammer-on"],
-  "tabs": {
-    "e": "----------------|",
-    "B": "----------------|",
-    "G": "-----5h7--5-----|",
-    "D": "--7-------------|",
-    "A": "----------------|",
-    "E": "----------------|"
-  }
+  "techniques_global": ["hammer-on"],
+  "tuning": "standard",
+  "events": [
+    { "start": 0, "duration": 0.5, "string": 3, "fret": 5, "technique": "hammer-on" },
+    { "start": 0.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "hammer-on" }
+  ]
 }
 ```
+
+`start` and `duration` are in beats. String numbers follow guitar convention (1 = high e, 6 = low E).
 
 ---
 
@@ -243,10 +252,12 @@ flowchart TD
     B --> C{User Action}
 
     C -->|Like| D[Store like interaction]
-    C -->|Scroll past| E[No signal yet - skip not implemented]
+    C -->|Save| E[Store save interaction]
+    C -->|Scroll past| F[No signal yet - skip not implemented]
 
     D --> G[Update Recommendation Scores]
     E --> G
+    F --> G
 
     G --> H[Return next highest-scoring unseen riff]
 ```
@@ -263,7 +274,7 @@ flowchart TD
 
 ## Data Model Philosophy
 
-The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings. Rather than star ratings or manual feedback, it uses implicit signals — interaction type, engagement duration, and content similarity — allowing the recommendation engine to evolve from simple content filtering into behavior-driven ranking over time.
+The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings. Rather than star ratings or manual feedback, it uses implicit signals interaction type, engagement duration, and content similarity allowing the recommendation engine to evolve from simple content filtering into behavior-driven ranking over time.
 
 ---
 
@@ -310,23 +321,42 @@ gantt
 
 ### 1. Clone the Repository
 
-```bash
+```
 git clone https://github.com/Zachwm/riffly
 ```
 
 ### 2. Set Up the Database
 
-Make sure PostgreSQL is running and create your database. Update the connection string in `backend/database.py`.
+Make sure PostgreSQL is running and create a database named `riffly`. Then create a `.env` file in the project root with your Postgres password:
 
-### 3. Start the Backend
+```
+POSTGRES_PASSWORD=your_password_here
+```
 
-```bash
+The app reads this via `python-dotenv` without it, the database connection will fail.
+
+### 3. Seed the Database
+
+Run `restart_db.py` to reset the schema and seed the database with initial riff data:
+
+```
+python restart_db.py
+```
+
+This will drop and recreate all tables, then populate them via `backend/scripts/seed_db.py`.
+
+### 4. Start the Backend
+
+```
 uvicorn backend.main:app --reload
 ```
 
-### 4. Open the Frontend
+### 5. Start the Frontend
 
-Open `index.html` directly in your browser.
+```
+npm install
+npm run dev
+```
 
 ---
 

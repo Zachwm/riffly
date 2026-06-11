@@ -1,152 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Riffly</title>
-  <link rel="stylesheet" href="styles.css">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>riffly</title>
+    <style>
+      .feed::-webkit-scrollbar {display: none;}
+      html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0f;
+}
+    </style>
 </head>
-
-<body>
-
-<div class="feed" id="feed"></div>
-
-<script>
-let sessionId = crypto.randomUUID();
-
-const feed = document.getElementById("feed");
-
-let loading = false;
-
-// IMPORTANT: prevents duplicate rendering
-const seen = new Set();
-
-// -------------------- INIT --------------------
-initFeed();
-
-async function initFeed() {
-  const riff1 = await fetchRiff();
-
-  if (!seen.has(riff1.id)) {
-    seen.add(riff1.id);
-    await markViewed(riff1.id);
-    addRiffCard(riff1);
-  }
-
-  const riff2 = await fetchRiff();
-
-  if (!seen.has(riff2.id)) {
-    seen.add(riff2.id);
-    await markViewed(riff2.id);
-    addRiffCard(riff2);
-  }
-}
-
-// -------------------- FETCH --------------------
-async function fetchRiff() {
-  const res = await fetch(
-    "http://127.0.0.1:8000/next-riff?session_id=" + sessionId
-  );
-  return await res.json();
-}
-
-// -------------------- SCROLL TRIGGER --------------------
-feed.addEventListener("scrollend", async () => {
-  if (loading) return;
-
-  const cards = feed.querySelectorAll(".card");
-  const lastCard = cards[cards.length - 1];
-  if (!lastCard) return;
-
-  const feedRect = feed.getBoundingClientRect();
-  const lastRect = lastCard.getBoundingClientRect();
-
-  if (lastRect.top < feedRect.bottom + feedRect.height) {
-    loading = true;
-
-    try {
-      const riff = await fetchRiff();
-
-      if (seen.has(riff.id)) {
-        loading = false;
-        return;
-      }
-
-      seen.add(riff.id);
-      await markViewed(riff.id);
-      addRiffCard(riff);
-
-    } catch (err) {
-      console.error("Failed to load riff", err);
-    } finally {
-      loading = false;
-    }
-  }
-});
-
-// -------------------- RENDER --------------------
-async function markViewed(id) {
-  await fetch("http://127.0.0.1:8000/interact", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      riff_id: id,
-      interaction_type: "view",
-      duration_ms: null,
-      session_id: sessionId
-    })
-  });
-}
-
-function addRiffCard(riff) {
-  const card = document.createElement("div");
-  card.className = "card";
-
-  card.innerHTML = `
-    <div class="title">${riff.title}</div>
-    <div class="meta">
-      <span>${riff.genre}</span>
-      <span>${riff.bpm} BPM</span>
-      <span>Difficulty ${riff.difficulty}</span>
-    </div>
-    <pre>${formatTabs(riff.tabs)}</pre>
-    <button onclick="likeRiff(${riff.id})">Like</button>
-  `;
-
-  feed.appendChild(card);
-  enforceLimit();
-}
-
-// -------------------- MEMORY LIMIT --------------------
-function enforceLimit() {
-  const cards = feed.querySelectorAll(".card");
-  if (cards.length > 10) {
-    cards[0].remove();
-  }
-}
-
-// -------------------- FORMAT --------------------
-function formatTabs(tabs) {
-  return Object.entries(tabs)
-    .map(([string, notes]) => `${string} | ${notes}`)
-    .join("\n");
-}
-
-// -------------------- LIKE --------------------
-function likeRiff(id) {
-  fetch("http://127.0.0.1:8000/interact", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      riff_id: id,
-      interaction_type: "like",
-      session_id: sessionId
-    })
-  });
-}
-</script>
-
-</body>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

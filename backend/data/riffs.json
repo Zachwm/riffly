@@ -1,0 +1,131 @@
+[
+  {
+    "id": 1,
+    "title": "Blues Hammer Groove",
+    "genre": "blues",
+    "difficulty": 2,
+    "bpm": 90,
+
+    "tags": ["blues", "minor", "riff"],
+    "techniques_global": ["hammer-on", "pull-off"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 0.5, "string": 3, "fret": 5, "technique": "hammer-on" },
+      { "start": 0.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "hammer-on" },
+      { "start": 1.0, "duration": 0.5, "string": 3, "fret": 8, "technique": null },
+      { "start": 1.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "pull-off" },
+
+      { "start": 2.0, "duration": 1.0, "string": 4, "fret": 5, "technique": null },
+
+      { "start": 3.0, "duration": 0.5, "string": 3, "fret": 5, "technique": "hammer-on" },
+      { "start": 3.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "hammer-on" }
+    ]
+  },
+
+  {
+    "id": 2,
+    "title": "Rock Power Drive",
+    "genre": "rock",
+    "difficulty": 2,
+    "bpm": 110,
+
+    "tags": ["rock", "power-chords", "rhythm"],
+    "techniques_global": ["strumming"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 1, "string": 5, "fret": 0, "technique": "strum" },
+      { "start": 1, "duration": 1, "string": 5, "fret": 0, "technique": "strum" },
+      { "start": 2, "duration": 1, "string": 4, "fret": 2, "technique": "strum" },
+      { "start": 3, "duration": 1, "string": 4, "fret": 2, "technique": "strum" }
+    ]
+  },
+
+  {
+    "id": 3,
+    "title": "Ambient Slide Texture",
+    "genre": "ambient",
+    "difficulty": 3,
+    "bpm": 100,
+
+    "tags": ["ambient", "slide", "atmospheric"],
+    "techniques_global": ["slide"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 2, "string": 4, "fret": 5, "technique": "slide" },
+      { "start": 2, "duration": 2, "string": 3, "fret": 4, "technique": "slide" },
+      { "start": 4, "duration": 2, "string": 2, "fret": 2, "technique": null }
+    ]
+  },
+
+  {
+    "id": 4,
+    "title": "Funk Sync Groove",
+    "genre": "funk",
+    "difficulty": 3,
+    "bpm": 115,
+
+    "tags": ["funk", "syncopation", "muted"],
+    "techniques_global": ["muting", "strumming"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 0.25, "string": 4, "fret": 5, "technique": "muted-strum" },
+      { "start": 0.25, "duration": 0.25, "string": 4, "fret": 5, "technique": "dead-note" },
+      { "start": 0.5, "duration": 0.25, "string": 3, "fret": 7, "technique": "strum" },
+      { "start": 0.75, "duration": 0.25, "string": 3, "fret": 5, "technique": "muted-strum" },
+
+      { "start": 1.0, "duration": 0.5, "string": 4, "fret": 5, "technique": null },
+      { "start": 1.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "strum" }
+    ]
+  },
+
+  {
+    "id": 5,
+    "title": "Metal Gallop Riff",
+    "genre": "metal",
+    "difficulty": 4,
+    "bpm": 160,
+
+    "tags": ["metal", "gallop", "chug"],
+    "techniques_global": ["palm-mute"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 0.25, "string": 5, "fret": 0, "technique": "palm-mute" },
+      { "start": 0.25, "duration": 0.25, "string": 5, "fret": 0, "technique": "palm-mute" },
+      { "start": 0.5, "duration": 0.5, "string": 5, "fret": 3, "technique": "palm-mute" },
+
+      { "start": 1.0, "duration": 0.25, "string": 5, "fret": 0, "technique": "palm-mute" },
+      { "start": 1.25, "duration": 0.25, "string": 5, "fret": 0, "technique": "palm-mute" },
+      { "start": 1.5, "duration": 0.5, "string": 5, "fret": 3, "technique": "palm-mute" }
+    ]
+  },
+
+  {
+    "id": 6,
+    "title": "Indie Arpeggio Flow",
+    "genre": "indie",
+    "difficulty": 2,
+    "bpm": 85,
+
+    "tags": ["indie", "clean", "arpeggio"],
+    "techniques_global": ["fingerpicking"],
+
+    "tuning": "standard",
+
+    "events": [
+      { "start": 0, "duration": 0.5, "string": 2, "fret": 0, "technique": "fingerpick" },
+      { "start": 0.5, "duration": 0.5, "string": 3, "fret": 2, "technique": "fingerpick" },
+      { "start": 1.0, "duration": 0.5, "string": 4, "fret": 2, "technique": "fingerpick" },
+      { "start": 1.5, "duration": 0.5, "string": 5, "fret": 0, "technique": null }
+    ]
+  }
+]
