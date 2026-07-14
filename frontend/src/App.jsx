@@ -26,6 +26,14 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import * as Tone from "tone";
 
+/**
+ * API base URL. Set VITE_API_URL in the environment (e.g. a Railway
+ * variable pointing at the deployed backend's public domain) for
+ * production/staging builds. Falls back to the local FastAPI dev server
+ * so `npm run dev` still works untouched.
+ */
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 // MIDI note number of each string's open (unfretted) pitch, standard tuning.
 const OPEN_NOTES = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
 
@@ -438,7 +446,7 @@ function SavedPanel({ sessionId, closing, volume, setVolume }) {
 
   useEffect(() => {
     setStatus("loading");
-    fetch(`http://127.0.0.1:8000/saved-riffs?session_id=${sessionId.current}`)
+    fetch(`${API_BASE}/saved-riffs?session_id=${sessionId.current}`)
       .then(r => r.json())
       .then(data => {
         if (!Array.isArray(data) || data.length === 0) { setStatus("empty"); return; }
@@ -664,12 +672,12 @@ export default function App() {
   async function fetchRiff() {
     try {
       const excludeParam = [...seen.current].join(",");
-      const res  = await fetch(`http://127.0.0.1:8000/next-riff?session_id=${sessionId.current}&exclude=${excludeParam}`);
+      const res  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=${excludeParam}`);
       const data = await res.json();
 
       if (data?.message === "no new riffs") {
         seenClear(seen, sessionId.current);
-        const res2  = await fetch(`http://127.0.0.1:8000/next-riff?session_id=${sessionId.current}&exclude=`);
+        const res2  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=`);
         const data2 = await res2.json();
         if (!data2?.id) return null;
         return normalizeRiff(data2);
@@ -942,7 +950,7 @@ function RiffCard({ riff, sessionId, volume, setVolume, externalPause = false })
      a long pause can't blow the score out of proportion.) */
   function sendViewInteraction(durationMs) {
     if (durationMs < MIN_VIEW_MS) return;
-    fetch("http://127.0.0.1:8000/interact", {
+    fetch(`${API_BASE}/interact`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         riff_id: riff.id,
@@ -1339,7 +1347,7 @@ function ActionButton({ riff, sessionId, type, label, activeLabel, icon, accent,
   });
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/interactions?session_id=${sessionId.current}&riff_id=${riff.id}`)
+    fetch(`${API_BASE}/interactions?session_id=${sessionId.current}&riff_id=${riff.id}`)
       .then(r => r.json())
       .then(data => {
         if (data[type] === true || data[type] === false) {
@@ -1357,7 +1365,7 @@ function ActionButton({ riff, sessionId, type, label, activeLabel, icon, accent,
     const next = !active;
     setActive(next);
     setCachedInteraction(sessionId.current, riff.id, type, next); // write to cache immediately (optimistic)
-    fetch("http://127.0.0.1:8000/interact", {
+    fetch(`${API_BASE}/interact`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ riff_id: riff.id, interaction_type: next ? type : `un${type}`, session_id: sessionId.current }),
     }).catch(() => {});
