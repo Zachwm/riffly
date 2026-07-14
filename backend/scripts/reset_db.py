@@ -4,16 +4,16 @@ from backend.scripts.seed_db import seed_db
 
 
 def reset_db():
-    print("🧨 Resetting database...")
+    print("Resetting database...")
 
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
-    print("✅ Tables created")
+    print("Tables created")
 
     seed_db()
 
-    print("🎉 Done")
+    print("Done")
 
 
 if __name__ == "__main__":

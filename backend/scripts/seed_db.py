@@ -20,12 +20,10 @@ def seed_db():
             difficulty=r.get("difficulty"),
             bpm=r.get("bpm"),
             tags=r.get("tags", []),
-            techniques=r.get("techniques", []),
-            tabs=r.get("tabs", {}),
             events=r.get("events", [])
         ))
 
     db.commit()
     db.close()
 
-    print("🌱 Seed complete")
+    print("Seed complete")

@@ -1,39 +1,42 @@
 # Riffly
 
-Riffly is a web-based personalized guitar learning platform focused on delivering short-form guitar riffs through a scrollable feed experience. The project explores how content-based recommendation systems and interaction-driven ranking can improve engagement and learning for beginner and intermediate guitar players.
+**Status: Official Alpha Release**
+
+Riffly is a web-based personalized guitar learning platform that delivers short-form guitar riffs through a scrollable, TikTok-style feed. It explores how interaction-driven, content-based recommendation can improve engagement and learning for beginner and intermediate guitar players — scroll to a riff, watch its tab notation scroll past a playhead in sync with real audio, adjust tempo/volume, and like/save the ones you want to keep. No login required.
 
 ---
 
-## Current Status
+## Feature Scope
 
-The project is in active MVP development.
+This alpha implements the full Must-Have requirement set (Section 2a, REQ-1–10) from the SRS (`Riffly_SRS_v1`, v1.2), plus three of its four Stretch requirements (Section 2b, STRETCH-1–4).
 
-### Completed
-- Scrollable riff feed with infinite scroll and lookahead loading
-- Automatic view tracking on card render
-- Like and Save interactions wired to backend
-- Session-based identity (no login required)
-- Duplicate prevention via `seen` Set (client-side)
-- FastAPI backend with PostgreSQL integration
-- Database schema implementation
-- Interaction tracking system (session-based)
-- Content-based recommendation engine (MVP)
-- Animated fretboard note renderer with playhead
-- Difficulty-based color theming
-- Tone.js audio playback (PolySynth, triangle oscillator)
-- Pause/resume on tap
-- Splash screen with audio context initialization
+### Must-Have Requirements — implemented
+- **REQ-1** Scrollable feed with infinite scroll — snap-scrolling feed, lookahead prefetch of the next riff before the last card is reached
+- **REQ-2** Personalized recommendation via cookie-token history — session-scoped affinity across tags and difficulty, scored and returned by `GET /next-riff`
+- **REQ-3** Interaction tracking with persistent cookie identity — UUID cookie generated on first visit, reused on return visits, with `view`/`like`/`save` all scoped to it
+- **REQ-4** Guitar tab notation display — all 6 string rows rendered per card, styled fretboard with technique markers
+- **REQ-5** Audio preview playback — Tone.js playback starts automatically as a card enters the viewport
+- **REQ-6** Save interaction — Save button records a `save` interaction and shows visual confirmed state
+- **REQ-7** Riff dataset of at least 50 entries — `riffs.json` contains 50 riffs, each with non-null title, genre, difficulty, BPM, tags, and tab events
+- **REQ-8** DOM memory cap — older cards are trimmed as you scroll past them (capped around the spec'd ~10 concurrently mounted cards)
+- **REQ-9** Backend API returns riff data as JSON — all endpoints (`/riffs`, `/next-riff`, `/saved-riffs`, `/interactions`) return serialized JSON
+- **REQ-10** Saved Riffs page — bookmark-icon-accessible slide-in panel listing all saved riffs, finite/scrollable, no further recommendations
 
-### In Progress
-- Scope and feasibility evaluation
-- Software Requirements Spec (SRS)
+### Stretch Requirements — implemented
+- **STRETCH-2** Engagement-weighted recommendations via `duration_ms` — view-completion scoring: watching past a pivot point is a positive signal, bailing out early is a negative one, scaled by how early
+- **STRETCH-3** Rewatch signal — not a separate interaction type; the `view` handler has no dedupe check (unlike like/save), so watching the same riff again applies another `view_completion_score` on top of the first, compounding the affinity boost for a rewatched riff
+- **STRETCH-4** Skip signal as negative feedback — not a separate interaction type; `view_completion_score` uses a 0.8-completion pivot, so any view that ends before 80% produces a negative score that lowers that riff's tag/difficulty affinity
 
-### Planned
-- Skip interaction
-- Audio preview playback on scroll
-- Guitar tab rendering (styled)
-- Difficulty and technique tagging UI
-- User authentication
+### Also implemented (supporting infrastructure, not directly a numbered REQ)
+- `seen`/like/save state mirrored to `localStorage`, namespaced per session, so the UI is instant and survives refreshes
+- Optimistic UI + backend reconciliation for Like/Save
+- Settings panel with a two-tap-confirm feed reset (new session, cleared local history)
+- Per-card BPM slider (snaps back to original tempo) and volume slider
+- Dedicated per-note synth for bends, so bending one note doesn't detune other ringing notes
+
+### Not in this release
+- **STRETCH-1** Filter or sort the feed by difficulty or technique tag
+- User authentication — everything is scoped to the anonymous session cookie, with `user_id` hardcoded to `1`; the `users` table exists in the schema but is reserved for future use
 
 ---
 
@@ -42,14 +45,14 @@ The project is in active MVP development.
 - **Frontend:** React (functional components + hooks), Tone.js
 - **Backend:** FastAPI (Python)
 - **Database:** PostgreSQL (via SQLAlchemy)
-- **Recommendation System:** Content-based filtering (MVP; extensible to hybrid or learning-to-rank models)
+- **Recommendation System:** Content-based filtering with session-level affinity + softmax sampling, extensible to hybrid or learning-to-rank models
 - **Version Control:** Git + GitHub
 
 ---
 
 ## Project Goal
 
-To explore how real-time interaction signals can be used to drive personalized learning in a short-form, feed-based educational system.
+To explore how real-time interaction signals can drive personalized learning in a short-form, feed-based educational system.
 
 ---
 
@@ -60,17 +63,22 @@ flowchart LR
     U[User] --> F[Frontend Feed UI]
 
     F -->|GET /next-riff| A[FastAPI Backend]
+    F -->|GET /saved-riffs| A
+    F -->|GET /interactions| A
     F -->|POST /interact - view| A
-    F -->|POST /interact - like| A
-    F -->|POST /interact - save| A
+    F -->|POST /interact - like/unlike| A
+    F -->|POST /interact - save/unsave| A
 
     A --> D[(PostgreSQL Database)]
 
     D --> R[Riff Metadata]
-    D --> I[User Interactions]
+    D --> I[Interaction Log]
+    D --> AF[Session Affinity]
+    D --> RS[Session Riff State]
 
     R --> S[Recommendation Scoring Engine]
-    I --> S
+    AF --> S
+    I --> AF
 
     S --> A
 ```
@@ -81,9 +89,11 @@ flowchart LR
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/riffs` | Returns all riffs |
-| `POST` | `/interact` | Records a user interaction |
-| `GET` | `/next-riff?session_id=` | Returns the next recommended riff for a session |
+| `GET` | `/riffs` | Returns all riffs (debug/seeding use) |
+| `GET` | `/next-riff?session_id=&exclude=` | Returns the recommender's pick for the next riff |
+| `GET` | `/saved-riffs?session_id=` | Returns every riff the session has saved |
+| `GET` | `/interactions?session_id=&riff_id=` | Returns current `{like, save}` state for one riff + session |
+| `POST` | `/interact` | Records a `view`, `like`, `unlike`, `save`, or `unsave` event |
 
 ### Interaction Request Body
 
@@ -96,7 +106,7 @@ flowchart LR
 }
 ```
 
-`duration_ms` is optional. Currently `view`, `like`, `unlike`, `save`, and `unsave` are sent by the frontend.
+`duration_ms` is only meaningful for `view` events, and is optional otherwise.
 
 ---
 
@@ -104,41 +114,34 @@ flowchart LR
 
 ### Session Identity
 
-A session ID is generated on page load using `crypto.randomUUID()` and attached to every interaction request. No login is required.
-
-```js
-const sessionId = useRef(crypto.randomUUID());
-```
+A session ID is a UUID stored in a long-lived cookie (`riffly_session_id`), created on first visit and reused on every later visit — not regenerated per page load. It's attached as a query param to every backend request. `seen` riff IDs and cached like/save state are mirrored to `localStorage`, namespaced by session ID, so a Settings-panel reset (which issues a new session) can't read back stale state from the previous session.
 
 ### Feed Loading
 
-The feed pre-loads two riffs on init, then uses a `scroll` event listener with a lookahead threshold to fetch the next riff before the user reaches the bottom.
+The feed prefetches two riffs on start. As you scroll, a `scrollend` listener recalculates the current card index, trims cards more than 8 behind it out of the DOM (correcting `scrollTop` in the same synchronous paint via `flushSync` so there's no visible jump), and fetches the next riff once you're within one card of the end of what's loaded.
 
-```
-scrollHeight - scrollTop - clientHeight < clientHeight * 0.5  ← triggers load
-```
-
-A `seen` Set prevents duplicate cards from rendering if the same riff ID is returned. A `lockRef` prevents concurrent fetch calls during scroll.
+A `seen` Set (persisted to `localStorage`) prevents the same riff from being queued twice client-side; a `lockRef` prevents overlapping fetches while one is in flight.
 
 ### Interaction Tracking
 
 | Interaction | Trigger |
 |-------------|---------|
-| `view` | Fired automatically when a card is added to the DOM |
-| `like` / `unlike` | Fired when the user clicks the Like button |
-| `save` / `unsave` | Fired when the user clicks the Save button |
+| `view` | Fired when a card leaves the viewport, with its *actual* on-screen dwell time (via `IntersectionObserver`); views under ~300ms are dropped as not meaningful |
+| `like` / `unlike` | Fired when the user taps the Like button |
+| `save` / `unsave` | Fired when the user taps the Save button |
 
-Skip is not yet implemented.
+Skip and rewatch aren't separate interaction types — both are folded into `view` scoring on the backend: a `view` that ends before 80% completion applies a negative score (skip signal), and repeat views of the same riff aren't deduped, so rewatching compounds the affinity boost (rewatch signal).
 
 ### Playback
 
-Each `RiffCard` runs a `setInterval` loop (16ms) that:
+Each `RiffCard` runs a 25ms interval loop that:
 - Advances playback time using `performance.now()`
-- Loops seamlessly based on riff duration
-- Triggers Tone.js note events via `triggerAttackRelease` at the correct beat offset
-- Pauses and resumes on tap, preserving playback position via `pausedTimeRef`
+- Loops seamlessly based on the riff's total beat length
+- Schedules Tone.js note events (`triggerAttackRelease`) ahead of time via a small lookahead window
+- Pauses and resumes on tap, preserving playback position
+- Routes bent notes through a short-lived, dedicated `Tone.Synth` per note (rather than detuning the shared `PolySynth`) so a bend doesn't pull other ringing notes out of tune
 
-Audio uses a `PolySynth` with a triangle oscillator per card, disposed on unmount.
+Audio uses one shared `PolySynth` (triangle oscillator) across all cards, plus per-note synths for bends, disposed after their release tail finishes.
 
 ### Fretboard Renderer
 
@@ -148,13 +151,11 @@ Notes scroll from right to left past a fixed playhead. Position is calculated pe
 x = (note.start × PX_PER_BEAT) - (time - LEAD_IN) × SPEED + PLAYHEAD_X
 ```
 
-A 3-beat lead-in gives the user time to prepare before the first note hits the playhead. Active notes scale up and glow.
+A lead-in gives the user time to prepare before the first note hits the playhead. Active notes scale up and glow; palm-mutes, bends, slides, hammer-ons/pull-offs, and taps each have distinct rendering (badges, bend-arc overlays, palm-mute bracket spans).
 
 ---
 
 ## Riff Data Model
-
-Each riff represents a short guitar learning snippet containing structured musical metadata and a list of timed note events.
 
 ```json
 {
@@ -163,10 +164,8 @@ Each riff represents a short guitar learning snippet containing structured music
   "genre": "blues",
   "difficulty": 2,
   "bpm": 90,
-  "key": "A minor",
+  "audio_url": null,
   "tags": ["blues", "beginner", "minor"],
-  "techniques_global": ["hammer-on"],
-  "tuning": "standard",
   "events": [
     { "start": 0, "duration": 0.5, "string": 3, "fret": 5, "technique": "hammer-on" },
     { "start": 0.5, "duration": 0.5, "string": 3, "fret": 7, "technique": "hammer-on" }
@@ -174,7 +173,9 @@ Each riff represents a short guitar learning snippet containing structured music
 }
 ```
 
-`start` and `duration` are in beats. String numbers follow guitar convention (1 = high e, 6 = low E).
+`start` and `duration` are in beats. String numbers follow guitar convention (1 = high e, 6 = low E). `events` may arrive from the backend as a JSON string or already-parsed array; the frontend normalizes it either way.
+
+`audio_url` exists as a column on `Riff` but isn't used by playback — audio is synthesized client-side by Tone.js directly from `events`, not streamed from a file. There is no `key` (musical key) column on the model; the frontend's `RiffCard` does reference `riff.key` for an optional "Key of ___" label, but since no riff data currently populates it, that label never renders. Add a `key` column (or drop the frontend reference) to reconcile this.
 
 ---
 
@@ -182,13 +183,6 @@ Each riff represents a short guitar learning snippet containing structured music
 
 ```mermaid
 erDiagram
-    USERS {
-        int id
-        string username
-        string skill_level
-        timestamp created_at
-    }
-
     RIFFS {
         int id
         string title
@@ -196,7 +190,8 @@ erDiagram
         int difficulty
         int bpm
         string audio_url
-        string video_url
+        json tags
+        json events
         timestamp created_at
     }
 
@@ -210,110 +205,76 @@ erDiagram
         timestamp created_at
     }
 
-    RIFF_TAGS {
-        int riff_id
-        string tag
+    SESSION_AFFINITY {
+        string session_id
+        string key
+        float score
     }
 
-    RIFF_TECHNIQUES {
+    SESSION_RIFF_STATE {
+        string session_id
         int riff_id
-        string technique
+        bool liked
+        bool saved
     }
 
-    USERS ||--o{ INTERACTIONS : creates
     RIFFS ||--o{ INTERACTIONS : receives
-    RIFFS ||--o{ RIFF_TAGS : has
-    RIFFS ||--o{ RIFF_TECHNIQUES : includes
+    RIFFS ||--o{ SESSION_RIFF_STATE : "current like/save state"
+    INTERACTIONS ||--o{ SESSION_AFFINITY : "incrementally updates"
 ```
 
-> **Note:** User authentication is not yet implemented. Interactions are tracked by `session_id`, with `user_id` hardcoded to `1` during the MVP phase.
+> User authentication is out of scope for this release. Interactions are tracked entirely by `session_id`, with `user_id` hardcoded to `1`. `SessionAffinity` holds each session's running score per `tag:<name>` / `difficulty:<level>` key; `SessionRiffState` holds the current like/save booleans per (session, riff) so toggles don't double-apply score deltas and `/interactions` / `/saved-riffs` can be read directly without replaying the interaction log. The raw `Interaction` log is kept as an audit trail / replay source if scoring weights ever change.
 
 ---
 
 ## Recommendation System
 
-The MVP recommendation system scores unseen riffs based on interaction history within the current session, then returns the highest-scoring one.
+Each session's affinity toward tags and difficulty levels is maintained incrementally as interactions happen, rather than recomputed from the full log on every read.
 
-### Scoring Table
+### Scoring
 
 | Signal | Score Delta | Notes |
 |--------|-------------|-------|
-| Riff genre matches a liked riff's genre | `+0.5` | Applied to all unseen riffs in that genre |
-| `view` interaction on riff | `+0.1` | Mild positive signal |
-| `like` interaction on riff | `+3.0` | Strong positive signal |
+| `like` / `unlike` | ±3.0, split across the riff's tags, plus applied to its difficulty bucket | Only applied on an actual state change (no double-counting repeat likes) |
+| `save` / `unsave` | ±2.0, split across tags + difficulty | Same de-dupe logic as like |
+| `view` (completion) | `(watched_ratio - 0.8) × 3.0` | Positive if you watch past 80% of a riff, negative (and increasingly so) the earlier you bail |
 
-Riffs that have already received any interaction are excluded entirely from recommendations.
+At read time, `/next-riff` scores every unseen riff as `tag_affinity_sum + difficulty_affinity × 1.2` (difficulty weight tuned down from an earlier value that let one like completely dominate the score), then picks via **softmax-weighted random sampling** rather than always taking the top score — so a slight score lead doesn't mean the same riff family gets recommended every time.
+
+### Exclusion logic
+
+`/next-riff` excludes the union of the riffs the client says it's already queued (`exclude` param) and every riff the session has a real `view` interaction for server-side. Because client-queued riffs are marked "seen" immediately (before they're necessarily watched), the client's local set is usually the tighter constraint. When it's exhausted, the frontend clears its local `seen` set and retries — which is what lets the feed keep going by re-surfacing riffs that were scrolled past too quickly to register a real server-side view, without exactly repeating the riff you just saw.
 
 ### Interaction Flow
 
 ```mermaid
 flowchart TD
-    A[Open Feed] --> B[View Riff - auto-tracked]
+    A[Open Feed] --> B[Card leaves viewport - view w/ real duration]
     B --> C{User Action}
 
-    C -->|Like| D[Store like interaction]
-    C -->|Save| E[Store save interaction]
-    C -->|Scroll past| F[No signal yet - skip not implemented]
+    C -->|Like| D[Update tag + difficulty affinity, +3.0]
+    C -->|Save| E[Update tag + difficulty affinity, +2.0]
+    C -->|Watched ratio| F[View-completion score applied]
 
-    D --> G[Update Recommendation Scores]
+    D --> G[SessionAffinity updated]
     E --> G
     F --> G
 
-    G --> H[Return next highest-scoring unseen riff]
+    G --> H[Score unseen riffs -> softmax sample -> next riff]
 ```
 
 ### Future Directions
 
-- Skip as a negative signal
-- Completion and `duration_ms` as engagement weight
 - Technique and tag overlap scoring
 - Difficulty proximity weighting
 - Hybrid or learning-to-rank model
+- Explicit "reset view history" endpoint for a clean feed loop
 
 ---
 
 ## Data Model Philosophy
 
-The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings. Rather than star ratings or manual feedback, it uses implicit signals interaction type, engagement duration, and content similarity allowing the recommendation engine to evolve from simple content filtering into behavior-driven ranking over time.
-
----
-
-## Development Timeline
-
-```mermaid
-gantt
-    title Riffly MVP Development Timeline
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
-
-    section Planning
-    Project Planning & Research        :done, p1, 2026-04-20, 7d
-    Tutorials / Dataset Gathering       :done, p2, 2026-04-27, 7d
-    System Design & Flow Diagrams       :done, p3, 2026-05-04, 7d
-
-    section Core Backend
-    FastAPI Backend Prototype           :done, p4, 2026-05-11, 7d
-    Recommendation Logic Prototype      :done, p5, 2026-05-18, 7d
-    Scope & Feasibility Evaluation      :active, p6, 2026-05-18, 4d
-
-    section Documentation
-    Software Requirements Spec (SRS)    :p7, 2026-05-25, 7d
-
-    section Backend Systems
-    Final Database Schema               :p8, 2026-06-01, 7d
-    Full Backend API                    :p9, 2026-06-08, 14d
-    User Authentication                 :p10, 2026-06-15, 7d
-    Interaction Tracking                :p11, 2026-06-22, 7d
-
-    section Frontend
-    Functional Feed UI                  :active, p12, 2026-06-29, 7d
-
-    section Finalization
-    Recommendation System Complete       :p13, 2026-07-06, 7d
-    Final Demo Prep                     :p14, 2026-07-13, 7d
-
-    todayMarker stroke-width:4px,stroke:#ff0000,opacity:0.7
-```
+The system is designed around a feed-based recommendation model where user behavior is more important than explicit ratings. Rather than star ratings or manual feedback, it uses implicit signals — interaction type, engagement duration, and content similarity — allowing the recommendation engine to evolve from simple content filtering into behavior-driven ranking over time.
 
 ---
 
@@ -333,17 +294,17 @@ Make sure PostgreSQL is running and create a database named `riffly`. Then creat
 POSTGRES_PASSWORD=your_password_here
 ```
 
-The app reads this via `python-dotenv` without it, the database connection will fail.
+The app reads this via `python-dotenv` — without it, the database connection will fail.
 
 ### 3. Seed the Database
 
-Run `restart_db.py` to reset the schema and seed the database with initial riff data:
+Run the reset script to (re)build the schema and seed initial riff data:
 
 ```
-python restart_db.py
+python -m backend.scripts.reset_db
 ```
 
-This will drop and recreate all tables, then populate them via `backend/scripts/seed_db.py`.
+This drops and recreates all tables, then populates them via `backend/scripts/seed_db.py`.
 
 ### 4. Start the Backend
 
@@ -351,11 +312,16 @@ This will drop and recreate all tables, then populate them via `backend/scripts/
 uvicorn backend.main:app --reload
 ```
 
+By default the backend allows CORS from `http://localhost:3000` and `http://localhost:5173`. Override with a comma-separated list via:
+
+```
+export RIFFLY_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
+```
+
 ### 5. Start the Frontend
 
 ```
-npm install
-npm run dev
+npm --prefix frontend run dev
 ```
 
 ---
