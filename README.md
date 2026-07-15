@@ -1,6 +1,6 @@
 # Riffly
 
-**Status: Official Alpha Release**
+**Status: Official Alpha Release — [Live Demo](https://frontend-production-a01b.up.railway.app)**
 
 Riffly is a web-based personalized guitar learning platform that delivers short-form guitar riffs through a scrollable, TikTok-style feed. It explores how interaction-driven, content-based recommendation can improve engagement and learning for beginner and intermediate guitar players — scroll to a riff, watch its tab notation scroll past a playhead in sync with real audio, adjust tempo/volume, and like/save the ones you want to keep. No login required.
 
@@ -42,9 +42,9 @@ This alpha implements the full Must-Have requirement set (Section 2a, REQ-1–10
 
 ## Tech Stack
 
-- **Frontend:** React (functional components + hooks), Tone.js
-- **Backend:** FastAPI (Python)
-- **Database:** PostgreSQL (via SQLAlchemy)
+- **Frontend:** React (functional components + hooks), Tone.js — deployed on [Railway](https://railway.com)
+- **Backend:** FastAPI (Python) — deployed on Railway
+- **Database:** PostgreSQL (via SQLAlchemy) — Railway-managed Postgres
 - **Recommendation System:** Content-based filtering with session-level affinity + softmax sampling, extensible to hybrid or learning-to-rank models
 - **Version Control:** Git + GitHub
 
@@ -94,6 +94,8 @@ flowchart LR
 | `GET` | `/saved-riffs?session_id=` | Returns every riff the session has saved |
 | `GET` | `/interactions?session_id=&riff_id=` | Returns current `{like, save}` state for one riff + session |
 | `POST` | `/interact` | Records a `view`, `like`, `unlike`, `save`, or `unsave` event |
+
+The live backend API is browsable at `https://backend-production-842c2.up.railway.app/docs` (FastAPI's auto-generated interactive docs).
 
 ### Interaction Request Body
 
@@ -278,7 +280,31 @@ The system is designed around a feed-based recommendation model where user behav
 
 ---
 
-## Running the Project
+## Deployment
+
+Riffly is hosted on [Railway](https://railway.com) as three linked services in one project:
+
+| Service | Purpose | Root Directory |
+|---------|---------|-----------------|
+| Frontend | React/Vite app, built and served as a static site | `/frontend` |
+| Backend | FastAPI app | `/` (repo root — `main.py` imports as `backend.core.*`, so it needs the repo root as its working directory) |
+| Postgres | Managed database | — |
+
+**Live URLs:**
+- App: https://frontend-production-a01b.up.railway.app
+- API docs: https://backend-production-842c2.up.railway.app/docs
+
+**Key environment variables:**
+
+| Service | Variable | Purpose |
+|---------|----------|---------|
+| Backend | `DATABASE_URL` | Auto-injected by Railway's Postgres plugin |
+| Backend | `RIFFLY_ALLOWED_ORIGINS` | CORS allowlist — set to the frontend's public domain |
+| Frontend | `VITE_API_URL` | Backend's public domain; baked into the JS bundle at build time, so changing it requires a redeploy, not just a restart |
+
+---
+
+## Running the Project Locally
 
 ### 1. Clone the Repository
 
@@ -294,7 +320,7 @@ Make sure PostgreSQL is running and create a database named `riffly`. Then creat
 POSTGRES_PASSWORD=your_password_here
 ```
 
-The app reads this via `python-dotenv` — without it, the database connection will fail.
+The app reads this via `python-dotenv` — without it, the database connection will fail. (In production, `DATABASE_URL` is used instead — see Deployment above.)
 
 ### 3. Seed the Database
 
@@ -319,6 +345,14 @@ export RIFFLY_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
 ```
 
 ### 5. Start the Frontend
+
+Create a `.env` (or `.env.local`) file inside `frontend/`:
+
+```
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+Then run:
 
 ```
 npm --prefix frontend run dev
