@@ -670,25 +670,25 @@ export default function App() {
    * action, which doesn't exist yet.
    */
   async function fetchRiff() {
-    try {
-      const excludeParam = [...seen.current].join(",");
-      const res  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=${excludeParam}`);
-      const data = await res.json();
+  try {
+    const excludeParam = [...seen.current].join(",");
+    const res  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=${excludeParam}`);
+    const data = await res.json();
 
-      if (data?.message === "no new riffs") {
-        seenClear(seen, sessionId.current);
-        const res2  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=`);
-        const data2 = await res2.json();
-        if (!data2?.id) return null;
-        return normalizeRiff(data2);
-      }
-      if (!data?.id) return null;
-      return normalizeRiff(data);
-    } catch (err) {
-      console.error("fetchRiff failed:", err);
-      return null;
+    if (data?.message === "no new riffs") {
+      seenClear(seen, sessionId.current);
+      const res2  = await fetch(`${API_BASE}/next-riff?session_id=${sessionId.current}&exclude=&recycle=true`);
+      const data2 = await res2.json();
+      if (!data2?.id) return null;
+      return normalizeRiff(data2);
     }
+    if (!data?.id) return null;
+    return normalizeRiff(data);
+  } catch (err) {
+    console.error("fetchRiff failed:", err);
+    return null;
   }
+}
 
   // NOTE: "view" interactions are no longer fired here. Firing them the
   // instant a riff is prefetched sent duration_ms=null every time, which

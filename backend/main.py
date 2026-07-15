@@ -355,35 +355,21 @@ def saved_riffs(session_id: str, db: Session = Depends(get_db)):
 # NEXT RIFF (RECOMMENDER)
 # -------------------------
 @app.get("/next-riff")
-def next_riff(session_id: str, exclude: str = "", db: Session = Depends(get_db)):
+def next_riff(session_id: str, exclude: str = "", recycle: bool = False, db: Session = Depends(get_db)):
     """Return the recommender's next pick for this session.
 
     Excludes riffs from two sources, unioned together:
       - `exclude`: comma-separated riff IDs the client has already seen
-        this page-load. Cheap and immediate — avoids a round trip lag on
-        the very next card, since the client knows about a riff before
-        the 'view' interaction that would record it server-side has even
-        fired.
+        this page-load.
       - Server-side history: every riff_id this session has a 'view'
-        Interaction row for. This is the actual source of truth for what
-        this session has been shown — it's what protects against a
-        cleared or corrupted localStorage `seen` set on the client
-        repeating riffs, since the client's `exclude` list alone can't be
-        trusted to be complete or persistent.
-
-    With no affinity history yet, picks uniformly at random from unseen
-    riffs; otherwise scores unseen riffs against this session's precomputed
-    tag/difficulty affinity (SessionAffinity) and picks via weighted
-    random sampling.
-
-    NOTE ON "no new riffs": because server-side history is now part of the
-    exclusion set, once a session has viewed every riff in the library,
-    this will keep returning {"message": "no new riffs"} even if the
-    client clears its local `exclude` list — there's currently no
-    "forget my view history" action that would let riffs recycle. If you
-    want the feed to loop once the library's exhausted, that needs an
-    explicit endpoint (e.g. delete this session's 'view' Interaction rows,
-    or filter server-side history by a recency cutoff instead of all-time).
+        Interaction row for, UNLESS `recycle=true` is passed, in which
+        case server-side history is skipped and only `exclude` applies.
+        This is what lets the feed loop once the library is exhausted:
+        the frontend detects "no new riffs", clears its local `seen`
+        set, and retries with `recycle=true` so previously-viewed riffs
+        become eligible again. `exclude` is still honored during a
+        recycle call so the client can protect against re-showing the
+        card(s) it's currently mid-scroll on.
     """
     client_excluded = set()
     if exclude:
@@ -392,15 +378,17 @@ def next_riff(session_id: str, exclude: str = "", db: Session = Depends(get_db))
         except ValueError:
             pass
 
-    server_seen_rows = (
-        db.query(Interaction.riff_id)
-        .filter(Interaction.session_id == session_id, Interaction.interaction_type == "view")
-        .distinct()
-        .all()
-    )
-    server_excluded = {row[0] for row in server_seen_rows}
-
-    excluded = client_excluded | server_excluded
+    if recycle:
+        excluded = client_excluded
+    else:
+        server_seen_rows = (
+            db.query(Interaction.riff_id)
+            .filter(Interaction.session_id == session_id, Interaction.interaction_type == "view")
+            .distinct()
+            .all()
+        )
+        server_excluded = {row[0] for row in server_seen_rows}
+        excluded = client_excluded | server_excluded
 
     riffs = db.query(Riff).all()
     unseen = [r for r in riffs if r.id not in excluded]
