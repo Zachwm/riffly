@@ -635,7 +635,7 @@ export default function App() {
     setTimeout(() => initFeed(), 300);
   }
 
-  const [volume, setVolumeState] = useState(80);
+  const [volume, setVolumeState] = useState(15);
   function setVolume(v) {
     setVolumeState(v);
     Tone.getDestination().volume.value = v === 0 ? -Infinity : 20 * Math.log10(v / 100);
