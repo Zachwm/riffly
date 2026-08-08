@@ -83,7 +83,7 @@ flowchart LR
     S --> A
 ```
 
----
+----
 
 ## API Endpoints
 
