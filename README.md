@@ -1,6 +1,6 @@
 # Riffly
 
-**Status: Official Alpha Release — [Live Demo](https://frontend-production-a01b.up.railway.app)**
+**Status: Official Alpha Release**
 
 Riffly is a web-based personalized guitar learning platform that delivers short-form guitar riffs through a scrollable, TikTok-style feed. It explores how interaction-driven, content-based recommendation can improve engagement and learning for beginner and intermediate guitar players — scroll to a riff, watch its tab notation scroll past a playhead in sync with real audio, adjust tempo/volume, and like/save the ones you want to keep. No login required.
 
@@ -289,10 +289,6 @@ Riffly is hosted on [Railway](https://railway.com) as three linked services in o
 | Frontend | React/Vite app, built and served as a static site | `/frontend` |
 | Backend | FastAPI app | `/` (repo root — `main.py` imports as `backend.core.*`, so it needs the repo root as its working directory) |
 | Postgres | Managed database | — |
-
-**Live URLs:**
-- App: https://frontend-production-a01b.up.railway.app
-- API docs: https://backend-production-842c2.up.railway.app/docs
 
 **Key environment variables:**
 
